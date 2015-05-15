@@ -26,6 +26,8 @@
 #include <QTimer>
 #include <QDebug>
 #include <QtCore/qmath.h>
+#include <QFileDialog>
+#include <QFile>
 
 #include "AboutDialog.h"
 
@@ -45,6 +47,7 @@ MainWindow::MainWindow(QWidget *parent) :
     icon.addFile(":/media/icon.ico");
     setWindowIcon(icon);
 
+    menuBar->addAction("Export angle data");
     menuBar->addAction("About");
     ui->gridLayout->setMenuBar(menuBar);
 
@@ -98,6 +101,7 @@ MainWindow::MainWindow(QWidget *parent) :
 void MainWindow::startTimer()
 {
     timer->start(1000/fps);
+    native->resetData();
     native->enableVelocityDrawing(velocityDrawing);
     native->enableAccelerationDrawing(accelerationDrawing);
     simulationTime->restart();
@@ -178,9 +182,29 @@ void MainWindow::handleMenuAction(QAction *a)
         dialog->show();
         return;
     }
-    if(a->text()=="Help")
+    if(a->text()=="Export angle data")
     {
 
+        QFileDialog saveFile;
+        QString selectedFile;
+        if(saveFile.exec())
+        {
+            selectedFile = saveFile.selectedFiles()[0];
+            QFile file( selectedFile );
+            if ( file.open(QIODevice::ReadWrite) )
+            {
+                QTextStream stream( &file );
+                QVector<qreal> data = native->getData();
+                stream << "[";
+                for(int i=0; i<data.size(); i++)
+                {
+                    stream << data[i];
+                    if(i!=data.size()-1)
+                        stream <<  ", ";
+                }
+                stream << "]";
+            }
+        }
         return;
     }
 }

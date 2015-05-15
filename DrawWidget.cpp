@@ -62,7 +62,8 @@ DrawWidget::DrawWidget(Helper *helper, QWidget *parent, const int fps):
     m_velocityX(0),
     m_velocityY(0),
     m_accelerationX(0),
-    m_accelerationY(0)
+    m_accelerationY(0),
+    m_initialAngularVelocity(0)
 {
     setMinimumSize(200, 200);
     setAutoFillBackground(false);
@@ -164,6 +165,7 @@ void DrawWidget::animate()
             qreal tempAcceleration = m_g*((qreal)CIRCLE_RADIUS/m_radius);
             qreal tempVelocity = m_velocityY+tempAcceleration*m_dt;
             QPointF tempPosition = QPointF(m_position.x()+m_velocityX*m_dt, m_position.y()+tempVelocity*m_dt);
+
             qreal dist = sqrt(pow(tempPosition.x(),2)+pow(tempPosition.y(),2));
 
             if(dist>CIRCLE_RADIUS)
@@ -210,6 +212,10 @@ void DrawWidget::animate()
     emit velocityChanged(QString::number(truncate(m_velocitySize))+" m/s");
 
     update();
+
+    qreal output = truncate(qRadiansToDegrees(limitAngle(m_angle)));
+    angle_data.append(output);
+
 }
 
 void DrawWidget::paintEvent(QPaintEvent *event)
@@ -228,7 +234,7 @@ void DrawWidget::setAngle(double angle)
     m_angle = (qreal)qDegreesToRadians(angle);
     m_velocityX=m_velocityY= m_accelerationX = m_accelerationY =0;
     m_angularAcceleration=0;
-    m_angularVelocity=0;
+    m_angularVelocity=m_initialAngularVelocity;
     m_initialPosition = m_position = QPointF(CIRCLE_RADIUS*qSin(m_angle),CIRCLE_RADIUS*qCos(m_angle));
     m_helper->cleanPath();
     update();
@@ -246,16 +252,25 @@ void DrawWidget::setRadius(double radius)
 {
     m_radius = (qreal)radius;
     m_angularAcceleration=0;
-    m_angularVelocity=0;
+    m_angularVelocity=m_initialAngularVelocity;
     m_helper->cleanPath();
 }
 
 qreal DrawWidget::limitAngle(qreal angle)
 {
+    /*limitare intre 0;2pi*/
+    /*
     if(angle>=2*PI)
         angle-=2*PI;
-    if(angle<=0)
+    if(angle<0)
         angle+=2*PI;
+    */
+    while(angle>PI)
+        angle-=2*PI;
+
+    while(angle<=-PI)
+        angle+=2*PI;
+
     return angle;
 }
 
@@ -267,6 +282,7 @@ void DrawWidget::enablePathDrawing(bool var)
 void DrawWidget::setAngularVelocity(double v)
 {
     m_angularVelocity = (qreal)v;
+    m_initialAngularVelocity = (qreal)v;
 }
 
 void DrawWidget::enableVelocityDrawing(bool var)
@@ -314,4 +330,14 @@ void DrawWidget::setGravitationalAcceleration(double var)
 {
     m_g = var;
     m_helper->cleanPath();
+}
+
+QVector<qreal> DrawWidget::getData()
+{
+    return angle_data;
+}
+
+void DrawWidget::resetData()
+{
+    angle_data.clear();
 }

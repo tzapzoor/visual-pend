@@ -22,6 +22,7 @@
 #define DRAWWIDGET_H
 
 #include <QWidget>
+#include <QVector>
 
 class Helper;
 
@@ -31,6 +32,8 @@ class DrawWidget : public QWidget
 
 public:
     DrawWidget(Helper *helper, QWidget *parent, const int fps);
+    QVector<qreal> getData();
+    void resetData();
 
 public slots:
     void animate();
@@ -88,6 +91,10 @@ private:
 
     qreal m_velocityX, m_velocityY;
     qreal m_accelerationX, m_accelerationY;
+
+    qreal m_initialAngularVelocity;
+
+    QVector<qreal> angle_data;
 
 private:
     qreal limitAngle(qreal angle);
